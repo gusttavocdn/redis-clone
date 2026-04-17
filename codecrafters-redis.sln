@@ -5,6 +5,11 @@ VisualStudioVersion = 25.0.1700.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "codecrafters-redis", "codecrafters-redis.csproj", "{D133C1BC-18C6-4906-A04C-7104C5285736}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+	ProjectSection(SolutionItems) = preProject
+		docs\resp-protocol.md = docs\resp-protocol.md
+	EndProjectSection
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "codecrafters-redis.UnitTests", "testes\UnitTests\codecrafters-redis.UnitTests.csproj", "{8AD87442-3AE2-4CD4-9CCE-CFFE92949F44}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "codecrafters-redis.IntegrationTests", "testes\IntegrationTests\codecrafters-redis.IntegrationTests.csproj", "{4594E61A-C644-4CCF-9C4F-CA4E8D5C55D1}"

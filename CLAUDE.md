@@ -46,9 +46,11 @@ git push origin master
 
 ## Regras de Desenvolvimento
 
-- **Toda implementação de feature ou mudança de comportamento deve ser acompanhada de testes unitários.** Isso inclui novos comandos Redis, alterações em parsing RESP, mudanças na lógica de armazenamento e qualquer outra lógica de negócio.
+- **Toda implementação de feature ou mudança de comportamento deve ser acompanhada de testes unitários. E ser feita utilizado TDD.
 - Os testes devem cobrir o caminho feliz e os casos de erro relevantes.
 - Nenhuma feature é considerada concluída sem testes que validem seu comportamento e garantam que nada do sistema existente foi quebrado.
+- **Todos os testes unitários devem usar [FluentAssertions](https://fluentassertions.com/) para asserções** — nunca `Assert.Equal`, `Assert.True` ou similares do xUnit diretamente.
+- **Quando houver dependências externas a isolar, usar [NSubstitute](https://nsubstitute.github.io/)** para criação de mocks/stubs — nunca implementações manuais de interfaces falsas.
 
 ## Fluxo de Trabalho no CodeCrafters
 
