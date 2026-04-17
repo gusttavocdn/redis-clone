@@ -10,6 +10,7 @@ public class CommandHandler
         return command[0].ToUpperInvariant() switch
         {
             "PING" => HandlePing(command),
+            "ECHO" => HandleEcho(command),
             var unknown => $"-ERR unknown command '{unknown}'\r\n"
         };
     }
@@ -23,5 +24,14 @@ public class CommandHandler
         }
 
         return "+PONG\r\n";
+    }
+
+    private static string HandleEcho(string[] command)
+    {
+        if (command.Length < 2)
+            return "-ERR wrong number of arguments for 'ECHO' command\r\n";
+
+        var message = command[1];
+        return $"${message.Length}\r\n{message}\r\n";
     }
 }

@@ -52,6 +52,50 @@ git push origin master
 - **Todos os testes unitários devem usar [FluentAssertions](https://fluentassertions.com/) para asserções** — nunca `Assert.Equal`, `Assert.True` ou similares do xUnit diretamente.
 - **Quando houver dependências externas a isolar, usar [NSubstitute](https://nsubstitute.github.io/)** para criação de mocks/stubs — nunca implementações manuais de interfaces falsas.
 
+## Testando Localmente no Windows
+
+### 1. Subir o servidor
+
+Abra um terminal PowerShell ou CMD na raiz do projeto:
+
+```powershell
+dotnet run --project codecrafters-redis.csproj
+```
+
+Você verá: `Redis server listening on port 6379...`
+
+### 2. Testar comandos manualmente
+
+Abra **outro** terminal e use este script PowerShell:
+
+```powershell
+$tcp = [System.Net.Sockets.TcpClient]::new("localhost", 6379)
+$stream = $tcp.GetStream()
+$writer = [System.IO.StreamWriter]::new($stream)
+$reader = [System.IO.StreamReader]::new($stream)
+
+# Envia PING
+$writer.Write("*1`r`n`$4`r`nPING`r`n")
+$writer.Flush()
+$reader.ReadLine()   # Resposta esperada: +PONG
+
+$tcp.Close()
+```
+
+### 3. Testar com redis-cli via Docker (opcional)
+
+No Windows, usar `host.docker.internal` para acessar o servidor rodando no host:
+
+```powershell
+docker run --rm redis redis-cli -h host.docker.internal -p 6379 PING
+# PONG
+
+docker run --rm redis redis-cli -h host.docker.internal -p 6379 PING "hello"
+# "hello"
+```
+
+---
+
 ## Fluxo de Trabalho no CodeCrafters
 
 As etapas são desbloqueadas progressivamente. Cada push para `master` aciona o CodeCrafters para executar testes automatizados contra o binário. Não há comandos de teste locais — a validação acontece nos servidores do CodeCrafters após `git push origin master`.

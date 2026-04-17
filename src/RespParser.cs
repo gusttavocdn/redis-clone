@@ -8,18 +8,11 @@ public static class RespParser
             throw new InvalidDataException($"Expected '*' but got '{input[0]}'");
 
         var lines = input.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
-        int count = int.Parse(lines[0][1..]);
 
-        var result = new string[count];
-        int lineIndex = 1;
-
-        for (int i = 0; i < count; i++)
-        {
-            // skip the $<length> line
-            lineIndex++;
-            result[i] = lines[lineIndex++];
-        }
-
-        return result;
+        // After skipping lines[0] ("*N"), the remaining lines alternate between
+        // "$<len>" (even index) and the actual value (odd index). We keep only odd ones.
+        return lines.Skip(1)
+                    .Where((_, i) => i % 2 == 1)
+                    .ToArray();
     }
 }

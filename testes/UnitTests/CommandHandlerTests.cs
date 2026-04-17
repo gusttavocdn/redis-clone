@@ -35,4 +35,22 @@ public class CommandHandlerTests
     {
         _handler.Handle(["UNKNOWN"]).Should().Be("-ERR unknown command 'UNKNOWN'\r\n");
     }
+
+    [Fact]
+    public void Handle_Echo_ReturnsBulkStringMessage()
+    {
+        _handler.Handle(["ECHO", "hello"]).Should().Be("$5\r\nhello\r\n");
+    }
+
+    [Fact]
+    public void Handle_EchoCaseInsensitive_ReturnsBulkStringMessage()
+    {
+        _handler.Handle(["echo", "hello"]).Should().Be("$5\r\nhello\r\n");
+    }
+
+    [Fact]
+    public void Handle_EchoWithoutArgument_ReturnsError()
+    {
+        _handler.Handle(["ECHO"]).Should().Be("-ERR wrong number of arguments for 'ECHO' command\r\n");
+    }
 }
