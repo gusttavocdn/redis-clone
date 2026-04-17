@@ -51,6 +51,7 @@ git push origin master
 - Nenhuma feature é considerada concluída sem testes que validem seu comportamento e garantam que nada do sistema existente foi quebrado.
 - **Todos os testes unitários devem usar [FluentAssertions](https://fluentassertions.com/) para asserções** — nunca `Assert.Equal`, `Assert.True` ou similares do xUnit diretamente.
 - **Quando houver dependências externas a isolar, usar [NSubstitute](https://nsubstitute.github.io/)** para criação de mocks/stubs — nunca implementações manuais de interfaces falsas.
+- **Todas as classes devem ser declaradas como `sealed` por padrão.** Remover o `sealed` apenas quando herança for explicitamente necessária e justificada.
 
 ## Testando Localmente no Windows
 

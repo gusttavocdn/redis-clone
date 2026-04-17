@@ -8,15 +8,16 @@ server.Start();
 
 Console.WriteLine("Redis server listening on port 6379...");
 
+var handler = new CommandHandler(new RedisStore());
+
 while (true)
 {
     var socket = await server.AcceptSocketAsync();
-    _ = HandleClientAsync(socket);
+    _ = HandleClientAsync(socket, handler);
 }
 
-static async Task HandleClientAsync(Socket socket)
+static async Task HandleClientAsync(Socket socket, CommandHandler handler)
 {
-    var handler = new CommandHandler();
     var buffer = new byte[1024];    
 
     try

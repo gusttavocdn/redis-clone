@@ -1,10 +1,11 @@
 using FluentAssertions;
+using NSubstitute;
 
 namespace codecrafters_redis.UnitTests;
 
 public class CommandHandlerTests
 {
-    private readonly CommandHandler _handler = new();
+    private readonly CommandHandler _handler = new(Substitute.For<IRedisStore>());
 
     [Fact]
     public void Handle_Ping_ReturnsPong()
