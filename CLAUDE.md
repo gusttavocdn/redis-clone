@@ -1,34 +1,55 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Este arquivo fornece orientações ao Claude Code (claude.ai/code) ao trabalhar com o código neste repositório.
 
-## Project Overview
+## Visão Geral do Projeto
 
-This is a CodeCrafters "Build Your Own Redis" challenge implemented in C# (.NET 10). The goal is to build a Redis clone capable of handling commands like `PING`, `SET`, and `GET` by implementing the Redis Serialization Protocol (RESP).
+Este é o desafio "Construa Seu Próprio Redis" do CodeCrafters, implementado em C# (.NET 10). O objetivo é construir um clone do Redis capaz de lidar com comandos como `PING`, `SET` e `GET`, implementando o Protocolo de Serialização do Redis (RESP).
 
-## Commands
+## Comandos
 
 **Build:**
 ```sh
 dotnet build --configuration Release --output /tmp/codecrafters-build-redis-csharp codecrafters-redis.csproj
 ```
 
-**Run locally:**
+**Executar localmente:**
 ```sh
 ./your_program.sh
 ```
 
-**Submit to CodeCrafters:**
+**Rodar testes unitários:**
+```sh
+dotnet test testes/UnitTests/codecrafters-redis.UnitTests.csproj
+```
+
+**Rodar testes de integração:**
+```sh
+dotnet test testes/IntegrationTests/codecrafters-redis.IntegrationTests.csproj
+```
+
+**Rodar todos os testes:**
+```sh
+dotnet test codecrafters-redis.sln
+```
+
+**Enviar para o CodeCrafters:**
 ```sh
 git push origin master
 ```
 
-## Architecture
+## Arquitetura
 
-- Entry point: `src/Program.cs` — all server logic lives here (single-file approach for this challenge)
-- The server listens on TCP port `6379` using `TcpListener`
-- CodeCrafters compiles via `.codecrafters/compile.sh` and runs via `.codecrafters/run.sh`
+- Ponto de entrada: `src/Program.cs` — toda a lógica do servidor está aqui (abordagem de arquivo único para este desafio)
+- O servidor escuta na porta TCP `6379` usando `TcpListener`
+- O CodeCrafters compila via `.codecrafters/compile.sh` e executa via `.codecrafters/run.sh`
 
-## CodeCrafters Workflow
+## Regras de Desenvolvimento
 
-Stages are unlocked progressively. Each push to `master` triggers CodeCrafters to run automated tests against the binary. There are no local test commands — validation happens on CodeCrafters' servers after `git push origin master`.
+- **Toda implementação de feature ou mudança de comportamento deve ser acompanhada de testes unitários.** Isso inclui novos comandos Redis, alterações em parsing RESP, mudanças na lógica de armazenamento e qualquer outra lógica de negócio.
+- Os testes devem cobrir o caminho feliz e os casos de erro relevantes.
+- Nenhuma feature é considerada concluída sem testes que validem seu comportamento e garantam que nada do sistema existente foi quebrado.
+
+## Fluxo de Trabalho no CodeCrafters
+
+As etapas são desbloqueadas progressivamente. Cada push para `master` aciona o CodeCrafters para executar testes automatizados contra o binário. Não há comandos de teste locais — a validação acontece nos servidores do CodeCrafters após `git push origin master`.
