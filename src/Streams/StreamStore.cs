@@ -15,6 +15,10 @@ internal sealed class StreamStore(TimeProvider time)
         var (ms, seq) = ResolveId(requestedId, lastId);
         var newId = new StreamId(ms, seq);
 
+        if (newId == new StreamId(0, 0))
+            return Result<string>.Fail(
+                "ERR The ID specified in XADD must be greater than 0-0");
+
         if (!newId.IsGreaterThan(lastId))
             return Result<string>.Fail(
                 "ERR The ID specified in XADD is equal or smaller than the target stream top item");

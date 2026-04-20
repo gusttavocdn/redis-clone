@@ -138,13 +138,13 @@ public class RedisStoreTests
     }
 
     [Fact]
-    public void XAdd_FullId_ZeroZero_ReturnsError()
+    public void XAdd_FullId_ZeroZero_ReturnsSpecificError()
     {
         var result = _store.XAdd("s", "0-0", [("f", "v")]);
 
         result.IsError.Should().BeTrue();
         result.Error.Should().Be(
-            "ERR The ID specified in XADD is equal or smaller than the target stream top item");
+            "ERR The ID specified in XADD must be greater than 0-0");
     }
 
     [Fact]
