@@ -116,4 +116,114 @@ public class RedisStoreTests
 
         store.KeyType("foo").Should().Be("none");
     }
+
+    [Fact]
+    public void KeyType_StreamKey_ReturnsStream()
+    {
+        _store.XAdd("mystream", "1-1", [("name", "John")]);
+
+        _store.KeyType("mystream").Should().Be("stream");
+    }
+
+    [Fact]
+    public void XAdd_FullId_UsesExactId()
+    {
+        var id = _store.XAdd("s", "1000-5", [("f", "v")]);
+
+        id.Should().Be("1000-5");
+    }
+
+    [Fact]
+    public void XAdd_FullId_ZeroOne_Succeeds()
+    {
+        var id = _store.XAdd("s", "0-1", [("f", "v")]);
+
+        id.Should().Be("0-1");
+    }
+
+    [Fact]
+    public void XAdd_FullId_ZeroZero_ThrowsInvalidOperation()
+    {
+        var act = () => _store.XAdd("s", "0-0", [("f", "v")]);
+
+        act.Should().Throw<InvalidOperationException>()
+           .WithMessage("ERR The ID specified in XADD is equal or smaller than the target stream top item");
+    }
+
+    [Fact]
+    public void XAdd_FullId_SameAsLast_ThrowsInvalidOperation()
+    {
+        _store.XAdd("s", "1000-5", [("f", "v")]);
+
+        var act = () => _store.XAdd("s", "1000-5", [("f", "v")]);
+
+        act.Should().Throw<InvalidOperationException>()
+           .WithMessage("ERR The ID specified in XADD is equal or smaller than the target stream top item");
+    }
+
+    [Fact]
+    public void XAdd_FullId_LessThanLast_ThrowsInvalidOperation()
+    {
+        _store.XAdd("s", "1000-5", [("f", "v")]);
+
+        var act = () => _store.XAdd("s", "999-0", [("f", "v")]);
+
+        act.Should().Throw<InvalidOperationException>()
+           .WithMessage("ERR The ID specified in XADD is equal or smaller than the target stream top item");
+    }
+
+    [Fact]
+    public void XAdd_PartialId_FirstEntry_SeqIsZero()
+    {
+        var id = _store.XAdd("s", "1000-*", [("f", "v")]);
+
+        id.Should().Be("1000-0");
+    }
+
+    [Fact]
+    public void XAdd_PartialId_SameMs_IncrementsSeq()
+    {
+        _store.XAdd("s", "1000-5", [("f", "v")]);
+
+        var id = _store.XAdd("s", "1000-*", [("f", "v")]);
+
+        id.Should().Be("1000-6");
+    }
+
+    [Fact]
+    public void XAdd_AutoId_ReturnsIdWithCurrentMs()
+    {
+        var fakeTime = new FakeTimeProvider();
+        var store = new RedisStore(fakeTime);
+        var expectedMs = fakeTime.GetUtcNow().ToUnixTimeMilliseconds();
+
+        var id = store.XAdd("s", "*", [("f", "v")]);
+
+        id.Should().StartWith($"{expectedMs}-");
+    }
+
+    [Fact]
+    public void XAdd_AutoId_SecondCallSameMs_IncrementsSeq()
+    {
+        var fakeTime = new FakeTimeProvider();
+        var store = new RedisStore(fakeTime);
+
+        store.XAdd("s", "*", [("f", "v")]);
+        var id = store.XAdd("s", "*", [("f", "v")]);
+
+        id.Should().EndWith("-1");
+    }
+
+    [Fact]
+    public void XAdd_AutoId_AfterTimeAdvance_ResetsSeqToZero()
+    {
+        var fakeTime = new FakeTimeProvider();
+        var store = new RedisStore(fakeTime);
+
+        store.XAdd("s", "*", [("f", "v")]);
+        fakeTime.Advance(TimeSpan.FromMilliseconds(1));
+        var id = store.XAdd("s", "*", [("f", "v")]);
+
+        id.Should().EndWith("-0");
+    }
 }

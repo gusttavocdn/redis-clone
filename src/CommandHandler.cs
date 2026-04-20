@@ -14,6 +14,7 @@ public sealed class CommandHandler(IRedisStore store)
             "SET"  => HandleSet(command),
             "GET"  => HandleGet(command),
             "TYPE" => HandleType(command),
+            "XADD" => HandleXAdd(command),
             var unknown => $"-ERR unknown command '{unknown}'\r\n"
         };
     }
@@ -92,5 +93,28 @@ public sealed class CommandHandler(IRedisStore store)
             return "-ERR wrong number of arguments for 'TYPE' command\r\n";
 
         return $"+{store.KeyType(command[1])}\r\n";
+    }
+
+    private string HandleXAdd(string[] command)
+    {
+        if (command.Length < 5 || (command.Length - 3) % 2 != 0)
+            return "-ERR wrong number of arguments for 'XADD' command\r\n";
+
+        var key = command[1];
+        var requestedId = command[2];
+
+        var fields = new List<(string Field, string Value)>();
+        for (var i = 3; i < command.Length; i += 2)
+            fields.Add((command[i], command[i + 1]));
+
+        try
+        {
+            var id = store.XAdd(key, requestedId, fields);
+            return $"${id.Length}\r\n{id}\r\n";
+        }
+        catch (InvalidOperationException ex)
+        {
+            return $"-{ex.Message}\r\n";
+        }
     }
 }
