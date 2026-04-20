@@ -13,7 +13,9 @@
       "Bash(powershell.exe -Command \"Get-Process -Id \\(Get-NetTCPConnection -LocalPort 6379 -ErrorAction SilentlyContinue\\).OwningProcess -ErrorAction SilentlyContinue | Stop-Process -Force\")",
       "Bash(docker run *)",
       "Bash(powershell.exe -Command \"Stop-Process -Name 'codecrafters-redis' -Force -ErrorAction SilentlyContinue\")",
-      "Bash(powershell.exe -Command \"Get-Process -Id \\(Get-NetTCPConnection -LocalPort 6379 -ErrorAction SilentlyContinue\\).OwningProcess | Stop-Process -Force\")"
+      "Bash(powershell.exe -Command \"Get-Process -Id \\(Get-NetTCPConnection -LocalPort 6379 -ErrorAction SilentlyContinue\\).OwningProcess | Stop-Process -Force\")",
+      "Bash(taskkill /PID 10204 /F)",
+      "Bash(kill 10204)"
     ]
   }
 }

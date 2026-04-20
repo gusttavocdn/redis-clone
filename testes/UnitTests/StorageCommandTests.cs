@@ -30,13 +30,80 @@ public class StorageCommandTests
     {
         _handler.Handle(["SET", "foo", "bar"]);
 
-        _store.Received(1).Set("foo", "bar");
+        _store.Received(1).Set("foo", "bar", null);
     }
 
     [Fact]
     public void Handle_SetWithoutEnoughArgs_ReturnsError()
     {
         _handler.Handle(["SET", "foo"]).Should().Be("-ERR wrong number of arguments for 'SET' command\r\n");
+    }
+
+    [Fact]
+    public void Handle_SetWithEX_CallsStoreWithCorrectExpiry()
+    {
+        _handler.Handle(["SET", "foo", "bar", "EX", "10"]);
+
+        _store.Received(1).Set("foo", "bar", TimeSpan.FromSeconds(10));
+    }
+
+    [Fact]
+    public void Handle_SetWithPX_CallsStoreWithCorrectExpiry()
+    {
+        _handler.Handle(["SET", "foo", "bar", "PX", "500"]);
+
+        _store.Received(1).Set("foo", "bar", TimeSpan.FromMilliseconds(500));
+    }
+
+    [Fact]
+    public void Handle_SetWithLowercaseEx_CallsStoreWithCorrectExpiry()
+    {
+        _handler.Handle(["SET", "foo", "bar", "ex", "10"]);
+
+        _store.Received(1).Set("foo", "bar", TimeSpan.FromSeconds(10));
+    }
+
+    [Fact]
+    public void Handle_SetWithoutExpiry_CallsStoreWithNullExpiry()
+    {
+        _handler.Handle(["SET", "foo", "bar"]);
+
+        _store.Received(1).Set("foo", "bar", null);
+    }
+
+    [Fact]
+    public void Handle_SetWithNonIntegerEX_ReturnsError()
+    {
+        _handler.Handle(["SET", "foo", "bar", "EX", "abc"])
+            .Should().Be("-ERR invalid expire time in 'SET' command\r\n");
+    }
+
+    [Fact]
+    public void Handle_SetWithZeroEX_ReturnsError()
+    {
+        _handler.Handle(["SET", "foo", "bar", "EX", "0"])
+            .Should().Be("-ERR invalid expire time in 'SET' command\r\n");
+    }
+
+    [Fact]
+    public void Handle_SetWithNegativeEX_ReturnsError()
+    {
+        _handler.Handle(["SET", "foo", "bar", "EX", "-5"])
+            .Should().Be("-ERR invalid expire time in 'SET' command\r\n");
+    }
+
+    [Fact]
+    public void Handle_SetWithEXButNoValue_ReturnsError()
+    {
+        _handler.Handle(["SET", "foo", "bar", "EX"])
+            .Should().Be("-ERR syntax error\r\n");
+    }
+
+    [Fact]
+    public void Handle_SetWithUnknownFlag_ReturnsError()
+    {
+        _handler.Handle(["SET", "foo", "bar", "ZZ", "10"])
+            .Should().Be("-ERR syntax error\r\n");
     }
 
     [Fact]

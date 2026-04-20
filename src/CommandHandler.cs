@@ -42,7 +42,35 @@ public sealed class CommandHandler(IRedisStore store)
         if (command.Length < 3)
             return "-ERR wrong number of arguments for 'SET' command\r\n";
 
-        store.Set(command[1], command[2]);
+        var key = command[1];
+        var value = command[2];
+        TimeSpan? expiry = null;
+
+        var i = 3;
+        while (i < command.Length)
+        {
+            var flag = command[i].ToUpperInvariant();
+            if (flag is "EX" or "PX")
+            {
+                if (i + 1 >= command.Length)
+                    return "-ERR syntax error\r\n";
+
+                if (!long.TryParse(command[i + 1], out var amount) || amount <= 0)
+                    return "-ERR invalid expire time in 'SET' command\r\n";
+
+                expiry = flag == "EX"
+                    ? TimeSpan.FromSeconds(amount)
+                    : TimeSpan.FromMilliseconds(amount);
+
+                i += 2;
+            }
+            else
+            {
+                return "-ERR syntax error\r\n";
+            }
+        }
+
+        store.Set(key, value, expiry);
         return "+OK\r\n";
     }
 
