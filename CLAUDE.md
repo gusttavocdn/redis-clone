@@ -96,7 +96,3 @@ docker run --rm redis redis-cli -h host.docker.internal -p 6379 PING "hello"
 ```
 
 ---
-
-## Fluxo de Trabalho no CodeCrafters
-
-As etapas são desbloqueadas progressivamente. Cada push para `master` aciona o CodeCrafters para executar testes automatizados contra o binário. Não há comandos de teste locais — a validação acontece nos servidores do CodeCrafters após `git push origin master`.
