@@ -1,3 +1,4 @@
+using System.Text;
 using FluentAssertions;
 
 namespace codecrafters_redis.UnitTests;
@@ -42,5 +43,55 @@ public class RespParserTests
         var act = () => RespParser.Parse("PING\r\n");
 
         act.Should().Throw<InvalidDataException>();
+    }
+
+    [Fact]
+    public async Task ReadAsync_PingCommand_ReturnsSingleElementArray()
+    {
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("*1\r\n$4\r\nPING\r\n"));
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+
+        var result = await RespParser.ReadAsync(reader);
+
+        result.Should().ContainSingle().Which.Should().Be("PING");
+    }
+
+    [Fact]
+    public async Task ReadAsync_SetCommand_ReturnsThreeElementArray()
+    {
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"));
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+
+        var result = await RespParser.ReadAsync(reader);
+
+        result.Should().Equal("SET", "foo", "bar");
+    }
+
+    [Fact]
+    public async Task ReadAsync_MultipleCommands_ReadsEachCorrectly()
+    {
+        var bytes = Encoding.UTF8.GetBytes(
+            "*1\r\n$4\r\nPING\r\n" +
+            "*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n");
+
+        using var stream = new MemoryStream(bytes);
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+
+        var first  = await RespParser.ReadAsync(reader);
+        var second = await RespParser.ReadAsync(reader);
+
+        first.Should().Equal("PING");
+        second.Should().Equal("SET", "foo", "bar");
+    }
+
+    [Fact]
+    public async Task ReadAsync_EndOfStream_ReturnsNull()
+    {
+        using var stream = new MemoryStream([]);
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+
+        var result = await RespParser.ReadAsync(reader);
+
+        result.Should().BeNull();
     }
 }

@@ -40,9 +40,47 @@ git push origin master
 
 ## Arquitetura
 
-- Ponto de entrada: `src/Program.cs` — toda a lógica do servidor está aqui (abordagem de arquivo único para este desafio)
-- O servidor escuta na porta TCP `6379` usando `TcpListener`
-- O CodeCrafters compila via `.codecrafters/compile.sh` e executa via `.codecrafters/run.sh`
+O projeto segue uma **arquitetura orientada a domínio por feature**, onde cada tipo de dado Redis possui sua própria pasta contendo store e comandos relacionados.
+
+### Estrutura de pastas
+
+```
+src/
+├── Program.cs                 ← ponto de entrada, bootstrapping mínimo
+├── Core/                      ← abstrações compartilhadas e comandos genéricos
+│   ├── IRedisStore.cs         ← contrato principal do store
+│   ├── RedisStore.cs          ← facade que delega para os stores por tipo
+│   ├── Result.cs              ← tipo Result<T> para erros esperados (sem exceções)
+│   ├── ICommandHandler.cs     ← contrato de handler de comando
+│   ├── CommandDispatcher.cs   ← roteamento de comandos por nome
+│   ├── PingCommand.cs
+│   ├── EchoCommand.cs
+│   └── TypeCommand.cs
+├── Protocol/                  ← serialização/deserialização RESP
+│   ├── RespParser.cs
+│   └── RespWriter.cs
+├── Server/                    ← infraestrutura TCP e loop de I/O
+│   └── RedisServer.cs
+├── Strings/                   ← domínio: tipo string do Redis
+│   ├── StringStore.cs
+│   ├── SetCommand.cs
+│   └── GetCommand.cs
+└── Streams/                   ← domínio: tipo stream do Redis
+    ├── StreamStore.cs
+    ├── StreamEntry.cs
+    ├── StreamId.cs
+    └── XAddCommand.cs
+```
+
+### Regras da arquitetura
+
+- **Novos tipos de dado** (Hash, List, Set, etc.) ganham uma pasta própria no padrão `src/<Tipo>/`, contendo o store e todos os comandos relacionados ao tipo.
+- **Comandos sem tipo específico** (ex: `PING`, `ECHO`, `TYPE`) ficam em `src/Core/`.
+- **Nenhum namespace adicional** — todo o código usa `namespace codecrafters_redis;`. A organização é por pasta, não por namespace.
+- **`RedisStore`** é o único ponto de acesso ao estado — é uma facade que delega para os stores por tipo. Novos stores devem ser registrados nela.
+- **`CommandDispatcher`** recebe os handlers via construtor. Novos comandos devem ser adicionados ao array de inicialização em `CommandDispatcher.cs`.
+- O servidor escuta na porta TCP `6379` usando `TcpListener`.
+- O CodeCrafters compila via `.codecrafters/compile.sh` e executa via `.codecrafters/run.sh`.
 
 ## Regras de Desenvolvimento
 

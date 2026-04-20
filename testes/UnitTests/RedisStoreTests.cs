@@ -120,7 +120,7 @@ public class RedisStoreTests
     [Fact]
     public void KeyType_StreamKey_ReturnsStream()
     {
-        _store.XAdd("mystream", "1-1", [("name", "John")]);
+        _ = _store.XAdd("mystream", "1-1", [("name", "John")]);
 
         _store.KeyType("mystream").Should().Be("stream");
     }
@@ -128,66 +128,61 @@ public class RedisStoreTests
     [Fact]
     public void XAdd_FullId_UsesExactId()
     {
-        var id = _store.XAdd("s", "1000-5", [("f", "v")]);
-
-        id.Should().Be("1000-5");
+        _store.XAdd("s", "1000-5", [("f", "v")]).Value.Should().Be("1000-5");
     }
 
     [Fact]
     public void XAdd_FullId_ZeroOne_Succeeds()
     {
-        var id = _store.XAdd("s", "0-1", [("f", "v")]);
-
-        id.Should().Be("0-1");
+        _store.XAdd("s", "0-1", [("f", "v")]).Value.Should().Be("0-1");
     }
 
     [Fact]
-    public void XAdd_FullId_ZeroZero_ThrowsInvalidOperation()
+    public void XAdd_FullId_ZeroZero_ReturnsError()
     {
-        var act = () => _store.XAdd("s", "0-0", [("f", "v")]);
+        var result = _store.XAdd("s", "0-0", [("f", "v")]);
 
-        act.Should().Throw<InvalidOperationException>()
-           .WithMessage("ERR The ID specified in XADD is equal or smaller than the target stream top item");
+        result.IsError.Should().BeTrue();
+        result.Error.Should().Be(
+            "ERR The ID specified in XADD is equal or smaller than the target stream top item");
     }
 
     [Fact]
-    public void XAdd_FullId_SameAsLast_ThrowsInvalidOperation()
+    public void XAdd_FullId_SameAsLast_ReturnsError()
     {
-        _store.XAdd("s", "1000-5", [("f", "v")]);
+        _ = _store.XAdd("s", "1000-5", [("f", "v")]);
 
-        var act = () => _store.XAdd("s", "1000-5", [("f", "v")]);
+        var result = _store.XAdd("s", "1000-5", [("f", "v")]);
 
-        act.Should().Throw<InvalidOperationException>()
-           .WithMessage("ERR The ID specified in XADD is equal or smaller than the target stream top item");
+        result.IsError.Should().BeTrue();
+        result.Error.Should().Be(
+            "ERR The ID specified in XADD is equal or smaller than the target stream top item");
     }
 
     [Fact]
-    public void XAdd_FullId_LessThanLast_ThrowsInvalidOperation()
+    public void XAdd_FullId_LessThanLast_ReturnsError()
     {
-        _store.XAdd("s", "1000-5", [("f", "v")]);
+        _ = _store.XAdd("s", "1000-5", [("f", "v")]);
 
-        var act = () => _store.XAdd("s", "999-0", [("f", "v")]);
+        var result = _store.XAdd("s", "999-0", [("f", "v")]);
 
-        act.Should().Throw<InvalidOperationException>()
-           .WithMessage("ERR The ID specified in XADD is equal or smaller than the target stream top item");
+        result.IsError.Should().BeTrue();
+        result.Error.Should().Be(
+            "ERR The ID specified in XADD is equal or smaller than the target stream top item");
     }
 
     [Fact]
     public void XAdd_PartialId_FirstEntry_SeqIsZero()
     {
-        var id = _store.XAdd("s", "1000-*", [("f", "v")]);
-
-        id.Should().Be("1000-0");
+        _store.XAdd("s", "1000-*", [("f", "v")]).Value.Should().Be("1000-0");
     }
 
     [Fact]
     public void XAdd_PartialId_SameMs_IncrementsSeq()
     {
-        _store.XAdd("s", "1000-5", [("f", "v")]);
+        _ = _store.XAdd("s", "1000-5", [("f", "v")]);
 
-        var id = _store.XAdd("s", "1000-*", [("f", "v")]);
-
-        id.Should().Be("1000-6");
+        _store.XAdd("s", "1000-*", [("f", "v")]).Value.Should().Be("1000-6");
     }
 
     [Fact]
@@ -197,9 +192,7 @@ public class RedisStoreTests
         var store = new RedisStore(fakeTime);
         var expectedMs = fakeTime.GetUtcNow().ToUnixTimeMilliseconds();
 
-        var id = store.XAdd("s", "*", [("f", "v")]);
-
-        id.Should().StartWith($"{expectedMs}-");
+        store.XAdd("s", "*", [("f", "v")]).Value.Should().StartWith($"{expectedMs}-");
     }
 
     [Fact]
@@ -208,10 +201,9 @@ public class RedisStoreTests
         var fakeTime = new FakeTimeProvider();
         var store = new RedisStore(fakeTime);
 
-        store.XAdd("s", "*", [("f", "v")]);
-        var id = store.XAdd("s", "*", [("f", "v")]);
+        _ = store.XAdd("s", "*", [("f", "v")]);
 
-        id.Should().EndWith("-1");
+        store.XAdd("s", "*", [("f", "v")]).Value.Should().EndWith("-1");
     }
 
     [Fact]
@@ -220,10 +212,9 @@ public class RedisStoreTests
         var fakeTime = new FakeTimeProvider();
         var store = new RedisStore(fakeTime);
 
-        store.XAdd("s", "*", [("f", "v")]);
+        _ = store.XAdd("s", "*", [("f", "v")]);
         fakeTime.Advance(TimeSpan.FromMilliseconds(1));
-        var id = store.XAdd("s", "*", [("f", "v")]);
 
-        id.Should().EndWith("-0");
+        store.XAdd("s", "*", [("f", "v")]).Value.Should().EndWith("-0");
     }
 }

@@ -1,17 +1,16 @@
 using FluentAssertions;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 
 namespace codecrafters_redis.UnitTests;
 
 public class StreamCommandTests
 {
     private readonly IRedisStore _store = Substitute.For<IRedisStore>();
-    private readonly CommandHandler _handler;
+    private readonly CommandDispatcher _handler;
 
     public StreamCommandTests()
     {
-        _handler = new CommandHandler(_store);
+        _handler = new CommandDispatcher(_store);
     }
 
     public static TheoryData<string[]> MissingArgCommands =>
@@ -40,7 +39,7 @@ public class StreamCommandTests
     public void Handle_XAdd_CallsStoreWithCorrectArgs()
     {
         _store.XAdd(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<(string, string)>>())
-              .Returns("1000-0");
+              .Returns(Result<string>.Ok("1000-0"));
 
         _handler.Handle(["XADD", "mystream", "*", "name", "John"]);
 
@@ -55,7 +54,7 @@ public class StreamCommandTests
     public void Handle_XAdd_ReturnsGeneratedId()
     {
         _store.XAdd(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<(string, string)>>())
-              .Returns("1526919030474-0");
+              .Returns(Result<string>.Ok("1526919030474-0"));
 
         var response = _handler.Handle(["XADD", "mystream", "*", "name", "John"]);
 
@@ -63,10 +62,10 @@ public class StreamCommandTests
     }
 
     [Fact]
-    public void Handle_XAdd_StoreThrows_ReturnsErrorResponse()
+    public void Handle_XAdd_StoreReturnsError_ReturnsErrorResponse()
     {
         _store.XAdd(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<(string, string)>>())
-              .Throws(new InvalidOperationException(
+              .Returns(Result<string>.Fail(
                   "ERR The ID specified in XADD is equal or smaller than the target stream top item"));
 
         var response = _handler.Handle(["XADD", "mystream", "0-0", "f", "v"]);
@@ -79,7 +78,7 @@ public class StreamCommandTests
     public void Handle_XAdd_CaseInsensitive()
     {
         _store.XAdd(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<(string, string)>>())
-              .Returns("1000-0");
+              .Returns(Result<string>.Ok("1000-0"));
 
         var response = _handler.Handle(["xadd", "mystream", "*", "f", "v"]);
 
@@ -98,7 +97,7 @@ public class StreamCommandTests
     public void Handle_XAdd_MultipleFields_CallsStoreCorrectly()
     {
         _store.XAdd(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<(string, string)>>())
-              .Returns("1000-0");
+              .Returns(Result<string>.Ok("1000-0"));
 
         _handler.Handle(["XADD", "s", "*", "f1", "v1", "f2", "v2"]);
 

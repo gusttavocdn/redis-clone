@@ -6,11 +6,11 @@ namespace codecrafters_redis.UnitTests;
 public class StorageCommandTests
 {
     private readonly IRedisStore _store = Substitute.For<IRedisStore>();
-    private readonly CommandHandler _handler;
+    private readonly CommandDispatcher _handler;
 
     public StorageCommandTests()
     {
-        _handler = new CommandHandler(_store);
+        _handler = new CommandDispatcher(_store);
     }
 
     [Fact]
