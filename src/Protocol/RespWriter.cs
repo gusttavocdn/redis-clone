@@ -7,4 +7,6 @@ public static class RespWriter
     public static string SimpleString(string s)   => $"+{s}\r\n";
     public static string Error(string msg)         => $"-{msg}\r\n";
     public static string Integer(long n)           => $":{n}\r\n";
+    public static string Array(int count)          => $"*{count}\r\n";
+    public static string EmptyArray()              => "*0\r\n";
 }

@@ -6,4 +6,5 @@ public interface IRedisStore
     string? Get(string key);
     string KeyType(string key);
     Result<string> XAdd(string key, string requestedId, IReadOnlyList<(string Field, string Value)> fields);
+    IReadOnlyList<StreamEntry> XRange(string key, string start, string end);
 }

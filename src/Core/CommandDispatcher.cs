@@ -14,6 +14,7 @@ public sealed class CommandDispatcher
             new GetCommand(store),
             new TypeCommand(store),
             new XAddCommand(store),
+            new XRangeCommand(store),
         ];
 
         _handlers = commands.ToDictionary(h => h.CommandName, StringComparer.OrdinalIgnoreCase);

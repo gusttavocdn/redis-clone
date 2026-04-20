@@ -217,4 +217,112 @@ public class RedisStoreTests
 
         store.XAdd("s", "*", [("f", "v")]).Value.Should().EndWith("-0");
     }
+
+    // ── XRange ───────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void XRange_NonExistentKey_ReturnsEmpty()
+    {
+        _store.XRange("missing", "-", "+").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void XRange_FullRange_ReturnsAllEntries()
+    {
+        _ = _store.XAdd("s", "1-1", [("f", "v")]);
+        _ = _store.XAdd("s", "2-1", [("f", "v")]);
+
+        var result = _store.XRange("s", "-", "+");
+
+        result.Should().HaveCount(2);
+        result[0].Id.Should().Be("1-1");
+        result[1].Id.Should().Be("2-1");
+    }
+
+    [Fact]
+    public void XRange_StartFilter_ExcludesEntriesBeforeStart()
+    {
+        _ = _store.XAdd("s", "1-1", [("f", "v")]);
+        _ = _store.XAdd("s", "2-1", [("f", "v")]);
+        _ = _store.XAdd("s", "3-1", [("f", "v")]);
+
+        var result = _store.XRange("s", "2-0", "+");
+
+        result.Should().HaveCount(2);
+        result[0].Id.Should().Be("2-1");
+        result[1].Id.Should().Be("3-1");
+    }
+
+    [Fact]
+    public void XRange_EndFilter_ExcludesEntriesAfterEnd()
+    {
+        _ = _store.XAdd("s", "1-1", [("f", "v")]);
+        _ = _store.XAdd("s", "2-1", [("f", "v")]);
+        _ = _store.XAdd("s", "3-1", [("f", "v")]);
+
+        var result = _store.XRange("s", "-", "2-1");
+
+        result.Should().HaveCount(2);
+        result[0].Id.Should().Be("1-1");
+        result[1].Id.Should().Be("2-1");
+    }
+
+    [Fact]
+    public void XRange_ExactId_ReturnsOnlyThatEntry()
+    {
+        _ = _store.XAdd("s", "1-1", [("f", "v")]);
+        _ = _store.XAdd("s", "2-1", [("f", "v")]);
+        _ = _store.XAdd("s", "3-1", [("f", "v")]);
+
+        var result = _store.XRange("s", "2-1", "2-1");
+
+        result.Should().ContainSingle().Which.Id.Should().Be("2-1");
+    }
+
+    [Fact]
+    public void XRange_PartialStartId_SeqCompletedAsZero()
+    {
+        _ = _store.XAdd("s", "1000-0", [("f", "v")]);
+        _ = _store.XAdd("s", "1000-5", [("f", "v")]);
+
+        var result = _store.XRange("s", "1000", "+");
+
+        result.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void XRange_PartialEndId_SeqCompletedAsMax()
+    {
+        _ = _store.XAdd("s", "999-0",  [("f", "v")]);
+        _ = _store.XAdd("s", "1000-5", [("f", "v")]);
+        _ = _store.XAdd("s", "1001-0", [("f", "v")]);
+
+        var result = _store.XRange("s", "-", "1000");
+
+        result.Should().HaveCount(2);
+        result[0].Id.Should().Be("999-0");
+        result[1].Id.Should().Be("1000-5");
+    }
+
+    [Fact]
+    public void XRange_NoMatchInRange_ReturnsEmpty()
+    {
+        _ = _store.XAdd("s", "1-1", [("f", "v")]);
+        _ = _store.XAdd("s", "5-1", [("f", "v")]);
+
+        _store.XRange("s", "2-0", "3-0").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void XRange_EntryFieldsArePreserved()
+    {
+        _ = _store.XAdd("s", "1-1", [("name", "John"), ("age", "30")]);
+
+        var result = _store.XRange("s", "-", "+");
+
+        result.Should().ContainSingle();
+        result[0].Fields.Should().BeEquivalentTo(
+            new[] { ("name", "John"), ("age", "30") },
+            o => o.WithStrictOrdering());
+    }
 }

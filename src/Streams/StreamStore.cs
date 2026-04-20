@@ -35,6 +35,23 @@ internal sealed class StreamStore(TimeProvider time)
         return Result<string>.Ok(finalId);
     }
 
+    public IReadOnlyList<StreamEntry> XRange(string key, string start, string end)
+    {
+        if (!_data.TryGetValue(key, out var entries))
+            return [];
+
+        var startId = StreamId.ParseStart(start);
+        var endId   = StreamId.ParseEnd(end);
+
+        return entries
+            .Where(e =>
+            {
+                var id = StreamId.Parse(e.Id);
+                return !startId.IsGreaterThan(id) && !id.IsGreaterThan(endId);
+            })
+            .ToList();
+    }
+
     private (ulong Ms, ulong Seq) ResolveId(string requestedId, StreamId lastId)
     {
         if (requestedId == "*")

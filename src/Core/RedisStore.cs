@@ -26,4 +26,7 @@ public sealed class RedisStore : IRedisStore
 
     public Result<string> XAdd(string key, string requestedId, IReadOnlyList<(string Field, string Value)> fields) =>
         _streams.XAdd(key, requestedId, fields);
+
+    public IReadOnlyList<StreamEntry> XRange(string key, string start, string end) =>
+        _streams.XRange(key, start, end);
 }
