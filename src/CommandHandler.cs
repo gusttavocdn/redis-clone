@@ -13,6 +13,7 @@ public sealed class CommandHandler(IRedisStore store)
             "ECHO" => HandleEcho(command),
             "SET"  => HandleSet(command),
             "GET"  => HandleGet(command),
+            "TYPE" => HandleType(command),
             var unknown => $"-ERR unknown command '{unknown}'\r\n"
         };
     }
@@ -83,5 +84,13 @@ public sealed class CommandHandler(IRedisStore store)
         return value is null
             ? "$-1\r\n"
             : $"${value.Length}\r\n{value}\r\n";
+    }
+
+    private string HandleType(string[] command)
+    {
+        if (command.Length < 2)
+            return "-ERR wrong number of arguments for 'TYPE' command\r\n";
+
+        return $"+{store.KeyType(command[1])}\r\n";
     }
 }

@@ -24,4 +24,6 @@ public sealed class RedisStore(TimeProvider? timeProvider = null) : IRedisStore
 
         return entry.Value;
     }
+
+    public string KeyType(string key) => Get(key) is not null ? "string" : "none";
 }

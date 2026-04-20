@@ -90,4 +90,30 @@ public class RedisStoreTests
 
         store.Get("foo").Should().Be("bar");
     }
+
+    [Fact]
+    public void KeyType_ExistingStringKey_ReturnsString()
+    {
+        _store.Set("foo", "bar");
+
+        _store.KeyType("foo").Should().Be("string");
+    }
+
+    [Fact]
+    public void KeyType_NonExistentKey_ReturnsNone()
+    {
+        _store.KeyType("nonexistent").Should().Be("none");
+    }
+
+    [Fact]
+    public void KeyType_ExpiredKey_ReturnsNone()
+    {
+        var fakeTime = new FakeTimeProvider();
+        var store = new RedisStore(fakeTime);
+
+        store.Set("foo", "bar", TimeSpan.FromSeconds(5));
+        fakeTime.Advance(TimeSpan.FromSeconds(6));
+
+        store.KeyType("foo").Should().Be("none");
+    }
 }

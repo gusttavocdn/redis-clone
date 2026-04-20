@@ -127,4 +127,44 @@ public class StorageCommandTests
     {
         _handler.Handle(["GET"]).Should().Be("-ERR wrong number of arguments for 'GET' command\r\n");
     }
+
+    [Fact]
+    public void Handle_TypeForExistingKey_ReturnsString()
+    {
+        _store.KeyType("foo").Returns("string");
+
+        _handler.Handle(["TYPE", "foo"]).Should().Be("+string\r\n");
+    }
+
+    [Fact]
+    public void Handle_TypeForNonExistentKey_ReturnsNone()
+    {
+        _store.KeyType("nonexistent").Returns("none");
+
+        _handler.Handle(["TYPE", "nonexistent"]).Should().Be("+none\r\n");
+    }
+
+    [Fact]
+    public void Handle_TypeWithoutKey_ReturnsError()
+    {
+        _handler.Handle(["TYPE"]).Should().Be("-ERR wrong number of arguments for 'TYPE' command\r\n");
+    }
+
+    [Fact]
+    public void Handle_TypeCaseInsensitive_ReturnsString()
+    {
+        _store.KeyType("foo").Returns("string");
+
+        _handler.Handle(["type", "foo"]).Should().Be("+string\r\n");
+    }
+
+    [Fact]
+    public void Handle_Type_CallsStoreKeyType()
+    {
+        _store.KeyType("foo").Returns("string");
+
+        _handler.Handle(["TYPE", "foo"]);
+
+        _store.Received(1).KeyType("foo");
+    }
 }
